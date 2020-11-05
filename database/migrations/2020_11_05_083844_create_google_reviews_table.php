@@ -15,21 +15,13 @@ class CreateGoogleReviewsTable extends Migration
     {
         Schema::create('google_reviews', function (Blueprint $table) {
             $table->bigIncrements('id');
-            $table->unsignedInteger('google_review_job_id');
+            $table->unsignedInteger('google_review_job_id')->comment('google_review_jobs id');
             $table->foreign('google_review_job_id')->references('id')->on('google_review_jobs')->onDelete('cascade');
-            $table->unsignedInteger('review_id');
-            $table->string('review_name', 255)->nullable();
-            $table->date('review_date');
-            $table->float('rating_value');
-            $table->text('review_text')->nullable();
-            $table->string('review_url', 512);
-            $table->string('profile_picture', 512)->nullable();
-            $table->string('location', 255)->nullable();
-            $table->string('review_title', 255)->nullable();
-            $table->boolean('verified_order');
-            $table->string('language_code', 20)->nullable();
-            $table->string('reviewer_title', 255)->nullable();
-            $table->text('meta_data')->nullable();
+            $table->unsignedInteger('review_id')->comment('DataShake Review Id');
+            $table->string('review_name', 255)->nullable()->comment('Google 評論者');
+            $table->date('review_date')->comment('Google 評論日期');
+            $table->float('rating_value')->comment('Google 評論分數');
+            $table->text('review_text')->nullable()->comment('Google 評論內容');
             $table->timestamps();
         });
     }

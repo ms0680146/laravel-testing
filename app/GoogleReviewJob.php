@@ -7,9 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class GoogleReviewJob extends Model
 {
     protected $fillable = [
-        'job_id', 'google_place_id', 'http_status_code',
-        'review_count', 'average_rating', 'last_crawl', 'crawl_status',
-        'percentage_complete', 'result_count', 'credits_used'
+        'job_id', 'google_place_id', 'review_count', 
+        'average_rating', 'crawl_status', 'credits_used'
     ];
 
     public function reviews()
