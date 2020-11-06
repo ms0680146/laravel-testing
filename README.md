@@ -80,7 +80,7 @@ $factory->define(GoogleReviewJob::class, function (Faker $faker) {
     ];
 });
 ```
-可以建起一個 GoogleReviewJob 後，把關聯的 GoogleReviews 建起來([Laravel: Factory Callback](https://laravel.com/docs/6.x/database-testing#factory-callbacks))。
+- 可以建起一個 GoogleReviewJob 後，把關聯的 GoogleReviews 建起來([Laravel: Factory Callback](https://laravel.com/docs/6.x/database-testing#factory-callbacks))。
 ```bash
 $factory->afterCreating(GoogleReviewJob::class, function (GoogleReviewJob $googleReviewJob, Faker $faker) {
     $googleReviewJob->reviews()->saveMany(
@@ -90,7 +90,7 @@ $factory->afterCreating(GoogleReviewJob::class, function (GoogleReviewJob $googl
     );
 });
 ```
-另外也可以把一些狀態相關的東西抽成[Laravel: Factory State](https://laravel.com/docs/6.x/database-testing#factory-states)
+- 另外也可以把一些狀態相關的東西抽成[Laravel: Factory State](https://laravel.com/docs/6.x/database-testing#factory-states)
 ```bash
 $factory->state(GoogleReviewJob::class, 'complete', function (Faker $faker) {
     return [
@@ -110,7 +110,7 @@ $factory->state(GoogleReviewJob::class, 'pending', function (Faker $faker) {
 ```
 
 database/factories/GoogleReviewFactory.php  
-由於 google_reviews 會用 google_review_job_id 關聯回 google_review_jobs，因此這邊可以先創建一筆 GoogleReviewJob.
+- 由於 google_reviews 會用 google_review_job_id 關聯回 google_review_jobs，因此這邊可以先創建一筆 GoogleReviewJob.
 ```bash
 $factory->define(GoogleReview::class, function (Faker $faker) {
     return [
