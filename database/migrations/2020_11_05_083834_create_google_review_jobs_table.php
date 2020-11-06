@@ -19,7 +19,7 @@ class CreateGoogleReviewJobsTable extends Migration
             $table->string('google_place_id', 255)->comment('Google 地點 Id');
             $table->unsignedInteger('review_count')->comment('Google 評論總數量');
             $table->float('average_rating')->comment('Google 評論總評分');
-            $table->string('crawl_status', 10)->comment('DataShake 爬取狀態(complete, maintenance, pending)');
+            $table->string('crawl_status', 20)->comment('DataShake 爬取狀態(complete, maintenance, pending)');
             $table->integer('credits_used')->nullable()->comment('DataShake 此次爬取消耗的點數');
             $table->timestamps();
         });
