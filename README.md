@@ -65,9 +65,9 @@ DB_PASSWORD=root
 
 ## 善用 Factory & Faker 建立假資料
 建立 google_review_jobs, google_reviews table, model和factory.    
-搭配 [Faker](https://github.com/fzaninotto/Faker) 建立假資料.  
 
 database/factories/GoogleReviewJobFactory.php
+- [Faker](https://github.com/fzaninotto/Faker) 建立假資料.  
 ```bash
 $factory->define(GoogleReviewJob::class, function (Faker $faker) {
     return [
