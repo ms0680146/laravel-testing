@@ -55,7 +55,74 @@ DB_PASSWORD=root
  </php>
 ```
 
+## 需求
+透過第三方服務來蒐集某些地點的評論  
+1. [DataShake 服務](https://www.datashake.com/)，給定該地點的Google Place ID後，DataShake會丟進他們的Queue去處理，處理完成後即可拿到評論。
+2. 建立 google_review_jobs，用來存 DataShake 處理的Job.
+3. 建立 google_reviews，用來存每則評論.
+4. google_review_jobs, google_reviews 為一對多關聯，一個google_review_jobs包含多個google_reviews.
+
+
 ## 善用 Factory & Faker 建立假資料
+建立 google_review_jobs, google_reviews table, model和factory.    
+搭配 [Faker](https://github.com/fzaninotto/Faker) 建立假資料.  
+
+database/factories/GoogleReviewJobFactory.php
+```bash
+$factory->define(GoogleReviewJob::class, function (Faker $faker) {
+    return [
+        'job_id' => $faker->randomDigit,
+        'google_place_id' => $faker->uuid,
+        'review_count' => $faker->numberBetween($min = 20, $max = 100), 
+        'average_rating' => $faker->randomElement(array(1,2,3,4,5)),
+        'crawl_status' => $faker->randomElement(array('complete', 'maintenance', 'pending')),
+        'credits_used' => $faker->randomElement(array(1,2,3,4,5)),
+    ];
+});
+```
+可以建起一個 GoogleReviewJob 後，把關聯的 GoogleReviews 建起來([Laravel: Factory Callback](https://laravel.com/docs/6.x/database-testing#factory-callbacks))。
+```bash
+$factory->afterCreating(GoogleReviewJob::class, function (GoogleReviewJob $googleReviewJob, Faker $faker) {
+    $googleReviewJob->reviews()->saveMany(
+        factory(GoogleReview::class, 3)->make([
+            'google_review_job_id' => $googleReviewJob['id'],
+        ])
+    );
+});
+```
+另外也可以把一些狀態相關的東西抽成[Laravel: Factory State](https://laravel.com/docs/6.x/database-testing#factory-states)
+```bash
+$factory->state(GoogleReviewJob::class, 'complete', function (Faker $faker) {
+    return [
+        'crawl_status' => 'complete'
+    ];
+});
+$factory->state(GoogleReviewJob::class, 'maintenance', function (Faker $faker) {
+    return [
+        'crawl_status' => 'maintenance'
+    ];
+});
+$factory->state(GoogleReviewJob::class, 'pending', function (Faker $faker) {
+    return [
+        'crawl_status' => 'pending'
+    ];
+});
+```
+
+database/factories/GoogleReviewFactory.php  
+由於 google_reviews 會用 google_review_job_id 關聯回 google_review_jobs，因此這邊可以先創建一筆 GoogleReviewJob.
+```bash
+$factory->define(GoogleReview::class, function (Faker $faker) {
+    return [
+        'google_review_job_id' => factory(GoogleReviewJob::class),
+        'review_id' => $faker->randomDigit,
+        'review_name' => $faker->name, 
+        'review_date' => $faker->date('Y-m-d'),
+        'rating_value' => $faker->randomElement(array(1,2,3,4,5)),
+        'review_text' => $faker->text,
+    ];
+});
+```
 
 ## 針對 model 做單元測試
 
