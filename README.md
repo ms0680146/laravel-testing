@@ -125,6 +125,59 @@ $factory->define(GoogleReview::class, function (Faker $faker) {
 ```
 
 ## 針對 model 做單元測試
+1. 測試 model 中的 relationship 是否正確.
+2. 測試的 function 名稱不用駝峰式命名法是因為想把測試的完整內容記錄下來, 看code的人才可以一目瞭然知道這在測什麼.   
+3. [RefreshDatabase](https://laravel.com/docs/6.x/database-testing#resetting-the-database-after-each-test) 這個 trait 會在跑每個測試 function 時執行 migrate:fresh 重置資料庫.
+4. 這邊有個小坑，若你是用指令 php artisan make:test UserTest --unit 產生 testcase 的話，會遇到 unit test 中抓不到 factory 的 bug，[目前官方文件是解釋說 unit test 本來就不應該用 factory 產生假資料](https://github.com/laravel/framework/issues/30879#issuecomment-567456608)。這邊我是[參考此篇文章](https://github.com/laravel/framework/issues/28378)將 use PHPUnit\Framework\TestCase; 改為 use Tests\TestCase; 。
+
+tests/Unit/GoogleReviewJobTest  
+- 測試 google_review_job 是否包含許多 google_reviews.
+```bash
+class GoogleReviewJobTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_google_review_job_has_many_google_reviews()
+    {
+        // Arrange(create 1 google_review_job & 3 google_reviews)
+        factory(GoogleReviewJob::class)->create();
+
+        // Act
+        $googleReviewJob = GoogleReviewJob::first();
+        $googleReviews = GoogleReview::all();
+
+        // Assert
+        // Method 1: Count that a googleReviewJob googleReviews collection exists.
+        $this->assertEquals(3, $googleReviewJob->reviews->count());
+        // Method 2: googleReviews are related to googleReviewJob and is a collection instance.
+        $this->assertInstanceOf('Illuminate\Database\Eloquent\Collection', $googleReviewJob->reviews);
+    }
+}
+```
+
+tests/Unit/GoogleReviewTest  
+- 測試 google_reviews 是否屬於 google_review_job.
+```bash
+class GoogleReviewTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_google_reviews_belongs_to_google_review_job()
+    {
+        // Arrange(create 1 google_review_job & 3 google_reviews)
+        factory(GoogleReviewJob::class)->create();
+
+        // Act
+        $googleReview = GoogleReview::all()->random(1)->first();
+
+        // Assert
+        // Method 1: Test by count that a GoogleReview has a parent relationship with GoogleReviewJob
+        $this->assertEquals(1, $googleReview->googleReviewJob()->count());
+        // Method 2: GoogleReview has a parent GoogleReviewJob and is a GoogleReviewJob instance.
+        $this->assertInstanceOf(GoogleReviewJob::class, $googleReview->googleReviewJob);
+    }
+}
+```
 
 ## 針對 repository 做單元測試
 
