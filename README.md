@@ -180,6 +180,93 @@ class GoogleReviewTest extends TestCase
 ```
 
 ## 針對 repository 做單元測試
+1. Repository Pattern 將 Model 取資料的邏輯拆到 Repository 中，讓 Model 變成真正的 Pure-Model，只留 relation，盡量不要有取資料的邏輯。
+2. 實作一個 BaseRepo 來放一般的 CRUD，讓之後的 Repository 都可以繼承。
+3. 採用 laravel app 來實例化 GoogleReviewJobRepo。
+4. 分別測試 GoogleReviewJobRepo 包含的 function: create, find, update, delete, findByGooglePlaceId
+
+tests/Unit/GoogleReviewJobRepoTest  
+- 測試 findByGooglePlaceId
+```bash
+public function test_find_google_review_job_by_google_place_id()
+{
+    // Arrange(create 1 google_review_job & 3 google_reviews)
+    $googlePlaceId = 'test123';
+    factory(GoogleReviewJob::class)->create([
+        'google_place_id' => $googlePlaceId
+    ]);
+        
+    // Act(find googleReviewJob by googlePlaceId
+    $googleReviewJob = $this->googleReviewJobRepo->findByGooglePlaceId($googlePlaceId);
+       
+    // Assert(check googleReviewJob is instance of GoogleReviewJob)
+    $this->assertInstanceOf(GoogleReviewJob::class, $googleReviewJob);
+}
+```
+
+tests/Unit/GoogleReviewJobRepoTest  
+- 測試 create
+```bash
+public function test_create_google_review_job()
+{
+    // Arrange
+    $data = [
+        'job_id' => 'test_job_id',
+        'google_place_id' => 'test_google_place_id', 
+        'review_count' => 10,
+        'average_rating' => 3.5, 
+        'crawl_status' => 'complete', 
+        'credits_used' => 10
+     ];
+
+    // Act(find googleReviewJob by id)
+    $googleReviewJob = $this->googleReviewJobRepo->create($data);
+        
+    // Assert
+    $this->assertInstanceOf(GoogleReviewJob::class, $googleReviewJob);
+    $this->assertDatabaseHas('google_review_jobs', ['job_id' => 'test_job_id']);
+}
+```
+
+tests/Unit/GoogleReviewJobRepoTest  
+- 測試 update，assertDatabaseHas檢查google_review_jobs table是否包含某筆資料; assertDatabaseMissing檢查google_review_jobs table是否不包含某筆資料
+```bash
+public function test_update_google_review_job()
+{
+    // Arrange
+    factory(GoogleReviewJob::class)->create([
+      'crawl_status' => 'pending',
+    ]);
+
+    // Act(update googleReviewJob crawl_status as complete)
+    $status = $this->googleReviewJobRepo->update(1, ['crawl_status' => 'complete']);
+        
+    // Assert
+    $this->assertTrue($status);
+    $this->assertDatabaseHas('google_review_jobs', ['crawl_status' => 'complete']);
+    $this->assertDatabaseMissing('google_review_jobs', ['crawl_status' => 'pending']);
+}
+```
+
+tests/Unit/GoogleReviewJobRepoTest  
+- 測試 delete，assertDatabaseMissing檢查google_review_jobs table是否不包含某筆資料
+```bash
+public function test_delete_google_review_job()
+{
+    // Arrange
+    factory(GoogleReviewJob::class)->create([
+        'job_id' => 'should_delete'
+    ]);
+
+    // Act(delete googleReviewJob)
+    $status = $this->googleReviewJobRepo->delete(1);
+        
+    // Assert
+    $this->assertTrue($status);
+    $this->assertDatabaseMissing('google_review_jobs', ['job_id' => 'should_delete']);
+}
+```
+
 
 ## 針對 service 做單元測試
 
