@@ -183,7 +183,7 @@ class GoogleReviewTest extends TestCase
 1. Repository Pattern 將 Model 取資料的邏輯拆到 Repository 中，讓 Model 變成真正的 Pure-Model，只留 relation，盡量不要有取資料的邏輯。
 2. 實作一個 BaseRepo 來放一般的 CRUD，讓之後的 Repository 都可以繼承。
 3. 採用 laravel app 來實例化 GoogleReviewJobRepo。
-4. 分別測試 GoogleReviewJobRepo 包含的 function: create, find, update, delete, findByGooglePlaceId
+4. 分別測試 GoogleReviewJobRepo 包含的 function: create, find, update, delete, findByGooglePlaceId。
 
 tests/Unit/GoogleReviewJobRepoTest  
 - 測試 findByGooglePlaceId
@@ -268,9 +268,81 @@ public function test_delete_google_review_job()
 ```
 
 
-## 針對 service 做單元測試
+## 針對 service 及 mockery 做單元測試
+1. DataShakeService: 發送請求到 DataShake 服務的 [add_review_profile](https://api.datashake.com/#reviews) 這隻 API。 
+2. GoogleReviewService: 處理發送請求到 Datashake 服務及後續資料儲存進 Database。
+3. 透過 Dependency Injection 注入 DataShakeService 及 GoogleReviewJobRepo。
+4. 由於測試會涉及到第三方的DataShake API，因為DataShake收費頗貴，所以我們不希望真的打API過去測試，因此採用 Mockery 來『模仿/代替』發出去的 DataShake API。
 
-## 善用 mockery 生成假物件做測試
+tests/TestCase.php 
+- 在TestCase內新增一個initMock的方法，這樣所有繼承的測試都可以直接使用這個方法。
+- Mockery::mock 可以利用 Reflection 機制幫我們建立假物件。
+- Service Container 的 instance 方法可以讓我們用假物件取代原來的物件。
+```bash
+protected function initMock($class)
+{
+    $mock = Mockery::mock($class);
+    $this->app->instance($class, $mock);
+    return $mock;
+}
+```
+
+tests/Unit/GoogleReviewServiceTest.php @ setUp
+- 透過 initMock 將假的 DataShakeService Class 取代真的 DataShakeService Class。
+- DataShakeService Mock 要在 GoogleReviewService application 建立起來之前先做。
+```bash
+private $dataShakeServiceMock = null;
+private $googleReviewService = null;
+
+public function setUp() : void
+{
+    parent::setUp();
+    $this->dataShakeServiceMock = $this->initMock(DataShakeService::class);
+    $this->googleReviewService = $this->app->make(GoogleReviewService::class);
+}
+```
+
+tests/Unit/GoogleReviewServiceTest.php @ test_add_review_profile
+- 把 Class Mock 起來後，我們可以對他做一些設定。相關的方法可以參閱vendor內的/mockery/mockery/library/Mockery/Expectation。這邊舉幾個-常用的方法：
+- shouldReceive(): 應該被呼叫的方法，假設你要呼叫 DataShakeService 內的 callAddReviewProfile 方法，就可以寫成 shouldReceive('callAddReviewProfile')。
+- once(): 只呼叫一次。
+- with(): 應該被傳入的參數。建議用with取代withAnyArgs()，可以當做是一種assert來確認傳入方法的參數是否正確，尤其當執行的物件要執行到Mock的方法前還有經過很多方法時，用 with() 可以確保資料傳入的正確性。
+- andReturn(): 回傳的參數。
+- andThrow(new Execption('xxx')): 拋出例外
+```bash
+public function test_add_review_profile()
+{
+    // Arrange (25sprout google place id: ChIJg8wV-cmrQjQR7o27A1TgiBs)
+    $googlePalceId = 'ChIJg8wV-cmrQjQR7o27A1TgiBs';
+    $params = [
+        'place_id' => $googlePalceId,
+    ];
+
+    $dataShakeResponse = [
+        'success' => true,
+        'job_id' => 10000,
+        'status' => 200,
+        'message' => 'add review into queue...'
+    ];
+
+    // Act
+    $this->dataShakeServiceMock
+        ->shouldReceive('callAddReviewProfile')
+        ->once()
+        ->with($params)
+        ->andReturn($dataShakeResponse);
+
+    $result = $this->googleReviewService->addReviewProfile($googlePalceId);
+
+    // Assert
+    $this->assertTrue($result);
+    $googleReviewJob = GoogleReviewJob::where('job_id', $dataShakeResponse['job_id'])->first();
+    $this->assertNotNull($googleReviewJob);
+}
+```
+
+
+## 善用 mockery 做測試
 
 ## Laravel 內建的 Fake Facade
 
