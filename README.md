@@ -343,6 +343,77 @@ public function test_add_review_profile()
 
 
 ## 善用 mockery 做測試
+1. Mocking Hard Dependencies: 舊有的程式碼可能不是用 Dependency Injection 方式注入，而是直接在程式碼中 new 物件，此時在測試 mock 物件的時候需要 [overload] (http://docs.mockery.io/en/latest/cookbook/mocking_hard_dependencies.html)。
+
+Service.php
+```bash
+<?php
+namespace App;
+class Service
+{
+    public function callExternalService($param)
+    {
+        $externalService = new Service\External($version = 5);
+        $externalService->sendSomething($param);
+        return $externalService->getSomething();
+    }
+}
+```
+
+ServiceTest.php
+```bash
+public function testCallingExternalService()
+{
+    $param = 'Testing';
+
+    $externalMock = Mockery::mock('overload:App\Service\External');
+    $externalMock->shouldReceive('sendSomething')
+            ->once()
+            ->with($param);
+    $externalMock->shouldReceive('getSomething')
+            ->once()
+            ->andReturn('Tested!');
+
+    $service = new \App\Service();
+    $result = $service->callExternalService($param);
+    $this->assertSame('Tested!', $result);
+}
+```
+
+2. Mock partial: 被測試的 function 內有用到相同 class 的 function 而需要 mock 掉時，可以用 [makePartial](http://docs.mockery.io/en/latest/reference/partial_mocks.html?highlight=makePartial#runtime-partial-test-doubles)
+
+UserService.php
+```bash
+public function clear($user){
+   $status = $this->removeUser($user->admID); 
+   if ($status) {
+       return true;
+   } else {
+       return 'clean_failed';
+   }
+}
+
+protect function removeUser($id){
+   return User::delete($id);
+}
+```
+
+UserServiceTest.php @ testClear
+```bash
+public function testClear(){
+   $service = \Mockery::mock(UserService::class)
+        ->shouldAllowMockingProtectedMethods()
+        ->makePartial()
+        ->allows([
+            'removeUser' => true
+        ]);
+
+   // 需要用上面mock的object去call function
+   $result = $service->clear($user);
+   $this->assertTrue($result);
+}
+```
+
 
 ## Laravel 內建的 Fake Facade
 
