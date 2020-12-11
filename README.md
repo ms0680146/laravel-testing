@@ -416,6 +416,18 @@ public function testClear(){
 
 
 ## Laravel 內建的 Fake Facade
+Laravel 提供許多 Fake 的 Facade，例如常用的: Event, Mail, Queue, Storage。    
+可參考[文件](https://laravel.com/docs/6.x/mocking)  
+
+這邊來實作一個寄送多語系信件的範例，情景如下：  
+1. 寄信之前檢查使用者的語系  
+2. 去S3上查找有沒有該語系的信件範本  
+3. 若有找到，則使用該語系的範本，若沒找到，會使用預設的英文範本  
+
+tests/Unit/AlertMailTest.php
+- 測試的時候不可能真的到S3去找，所以我們透過 Laravel 提供的 Storage Fake Facade 來模擬 S3 的情境  
+- 測試到S3上找得到該信件範本(@test_alert_mail_from_s3_fr_json)  
+- 測試到s3上找不到該語系的信件範本(@test_alert_survey_mail_from_default_en_json)  
 
 ## 針對 API 做功能測試
 
