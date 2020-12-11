@@ -16,3 +16,6 @@ use Illuminate\Http\Request;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('google_reviews', 'GoogleReviewController@index'); 
+Route::get('google_reviews/{id}', 'GoogleReviewController@show');

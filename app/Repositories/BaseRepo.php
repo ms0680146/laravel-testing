@@ -32,4 +32,9 @@ class BaseRepo
     {
         return $this->model->find($id)->delete();
     }
+
+    public function list(): iterable
+    {
+        return $this->model->get();
+    }
 }
