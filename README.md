@@ -430,5 +430,58 @@ tests/Unit/AlertMailTest.php
 - 測試到s3上找不到該語系的信件範本(@test_alert_survey_mail_from_default_en_json)  
 
 ## 針對 API 做功能測試
+新增兩隻API，分別為呈現 Google Review 單筆及多筆資料。  
+可參考：GoogleReviewController  
+
+針對API的部分，撰寫Feature Test，檢查回傳狀態及回傳結構。  
+GoogleReviewApiTest.php @ test_google_reviews_api
+```bash
+public function test_google_reviews_api()
+{
+    // Arrange(create 1 google_review_job & 1 google_reviews)
+    factory(GoogleReview::class)->create();
+    // Act
+    $response = $this->json('GET', 'api/google_reviews');
+    // Assert
+    $response->assertStatus(200);
+    $response->assertJsonStructure([
+        'status',
+        'message',
+        'data' => [
+            '*' => [
+                'id',
+                'review_name',
+                'review_date'
+                'rating_value',
+                'review_text'
+            ]
+        ]
+    ]);
+}
+```
+
+GoogleReviewApiTest.php @ test_google_review_api
+```bash
+public function test_google_review_api()
+{
+    // Arrange(create 1 google_review_job & 1 google_reviews)
+    factory(GoogleReview::class)->create();
+    // Act
+    $response = $this->json('GET', 'api/google_reviews/1');
+    // Assert
+    $response->assertStatus(200);
+    $response->assertJsonStructure([
+        'status',
+        'message',
+        'data' => [
+            'id',
+            'review_name',
+            'review_date',
+            'rating_value',
+            'review_text'
+        ]
+    ]);
+}
+```
 
 ## 撰寫自動化測試腳本
