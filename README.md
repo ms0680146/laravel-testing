@@ -485,3 +485,45 @@ public function test_google_review_api()
 ```
 
 ## 撰寫自動化測試腳本
+可參考 .gitlab-ci.yml
+```bash
+stages:
+  - test
+
+test-mysql:
+  tags:
+    - php7.2
+    - unit-test
+    - utc0 
+  stage: test
+  only:
+    - main
+  cache:
+    key: "$CI_COMMIT_REF_NAME-$CI_JOB_NAME"
+    paths:
+      - vendor
+  artifacts:
+    expire_in: 2 hours
+    paths:
+      - coverage
+      - .env
+  # image: mysql5.7 is used to create a container that is linked to the job container.
+  services:
+    - mysql:5.7
+  variables:
+    # mysql services
+    MYSQL_ROOT_PASSWORD: root_password
+    MYSQL_DATABASE: homestead
+    MYSQL_USER: homestead
+    MYSQL_PASSWORD: secret
+  before_script:
+    - echo 'install php-pcov'
+    - apt update && apt install -y php-pcov
+  script:
+    - composer global require hirak/prestissimo
+    - composer install --no-scripts --no-interaction --ignore-platform-reqs
+    - echo "${_TESTING_MYSQL_ENV}" > .env
+    - php artisan key:generate
+    - php artisan migrate:refresh --seed
+    - ./vendor/bin/phpunit --coverage-text --coverage-html=coverage
+```
