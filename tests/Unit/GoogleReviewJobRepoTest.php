@@ -27,7 +27,7 @@ class GoogleReviewJobRepoTest extends TestCase
         factory(GoogleReviewJob::class)->create([
             'google_place_id' => $googlePlaceId
         ]);
-        
+
         // Act(find googleReviewJob by googlePlaceId)
         $googleReviewJob = $this->googleReviewJobRepo->findByGooglePlaceId($googlePlaceId);
        
