@@ -485,7 +485,16 @@ public function test_google_review_api()
 ```
 
 ## 撰寫自動化測試腳本
-可參考 .gitlab-ci.yml
+可參考 .gitlab-ci.yml  
+各參數介紹：  
+- tags: gitlab runnner tags.  
+- stage: pipeline stages.  
+- only: trigger branch.
+- cache: store cache file.
+- artifacts: store & manage file.
+- services: create a container that is linked to job container.
+- variables: some services variables.
+
 ```bash
 stages:
   - test
