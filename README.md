@@ -343,7 +343,7 @@ public function test_add_review_profile()
 
 
 ## 善用 mockery 做測試
-1. Mocking Hard Dependencies: 舊有的程式碼可能不是用 Dependency Injection 方式注入，而是直接在程式碼中 new 物件，此時在測試 mock 物件的時候需要 [overload] (http://docs.mockery.io/en/latest/cookbook/mocking_hard_dependencies.html)。
+1. Mocking Hard Dependencies: 舊有的程式碼可能不是用 Dependency Injection 方式注入，而是直接在程式碼中 new 物件，此時在測試 mock 物件的時候需要 [overload](http://docs.mockery.io/en/latest/cookbook/mocking_hard_dependencies.html)
 
 Service.php
 ```bash
